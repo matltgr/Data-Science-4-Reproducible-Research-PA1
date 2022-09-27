@@ -1,0 +1,54 @@
+---
+title: "Submission"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE, tidy.opts = list(width.cutoff = 80))
+```
+
+## Code for reading in the dataset and/or processing the data
+
+```{r}
+df <- read.csv('activity.csv')
+```
+
+## Histogram of the total number of steps taken each day
+
+```{r, fig.width = 10, fig.height = 6}
+library(ggplot2)
+library(dplyr)
+
+tdf <- df %>% filter(!is.na(steps)) %>% group_by(date) %>% summarise(t_steps = sum(steps))
+
+his <- ggplot(tdf, aes(x = t_steps)) + geom_histogram(color = 'red3', fill = 'red', alpha = 0.2) + labs(title = "Daily steps histogram", y = '# days', x = 'Daily steps')
+his
+```
+
+
+## Mean and median number of steps taken each day
+
+```{r}
+tdf %>% select(t_steps) %>% summarise(mean = mean(t_steps), median = median(t_steps))
+```
+
+## Time series plot of the average number of steps taken
+
+```{r, tidy.opts = list(width.cutoff = 50), fig.width = 10, fig.height = 5.5}
+library(latex2exp)
+
+ts_df <- df %>% filter(!is.na(steps)) %>% group_by(interval) %>% summarise(avg_steps = mean(steps)) %>% mutate(pretty_interval = paste(as.character(interval %/% 100), "h", as.character(interval %% 100)))
+
+ts <- ggplot(ts_df, aes(x = interval, y = avg_steps)) + geom_point(size = 1, color = 'royalblue', fill = 'blue') + geom_line(size = 0.75, alpha = 0.5, color = 'blue2') + labs(title = 'Average number of steps per 5 min interval', x = 'interval (5min)') + ylab(TeX('$\\bar{steps}$'))
+
+ts  
+```
+## The 5-minute interval that, on average, contains the maximum number of steps
+
+```{r}
+
+ts_df %>% top_n(1, avg_steps) %>% select(pretty_interval)
+
+```
+
